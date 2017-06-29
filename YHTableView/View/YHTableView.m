@@ -31,34 +31,6 @@
         UIPanGestureRecognizer* panGesture = [[UIPanGestureRecognizer alloc] init];
         [panGesture addTarget:self action:@selector(handlePanGesture:)];
         [self addGestureRecognizer:panGesture];
-        
-
-//        YHCellNode* node0 = [[YHCellNode alloc] init];
-//        [self.reusedCells setValue:node0 forKey:@"ID"];
-//        
-//        YHCellNode* iterater = [self.reusedCells valueForKey:@"ID"];
-//        
-//        NSLog(@"iterater = %@", iterater);
-//        for (NSUInteger i = 0; i < 3; i++) {
-//            YHCellNode* node = [[YHCellNode alloc] init];
-//            iterater.pointer = node;
-//            iterater = iterater.pointer;
-//        }
-//        
-//        YHCellNode* iterater0 = [self.reusedCells valueForKey:@"ID"];
-//        while (iterater0 != nil) {
-//            NSLog(@"%@", iterater0);
-//            iterater0 = iterater0.pointer;
-//        }
-//        
-//        NSLog(@"Remove the first...");
-//        YHCellNode* iterater1 = [self.reusedCells valueForKey:@"ID"];
-//        [self.reusedCells setValue:iterater1.pointer forKey:@"ID"];
-//        YHCellNode* iterater2 = [self.reusedCells valueForKey:@"ID"];
-//        while (iterater2 != nil) {
-//            NSLog(@"%@", iterater2);
-//            iterater2 = iterater2.pointer;
-//        }
     }
     
     return self;
@@ -66,6 +38,7 @@
 
 - (void) handlePanGesture:(UIPanGestureRecognizer*) panGesture
 {
+    NSLog(@"handlePanGesture");
     if(panGesture.state == UIGestureRecognizerStateBegan)
     {
         self.prevOrigin = self.bounds.origin;
@@ -77,7 +50,6 @@
         CGFloat newOriginX = self.prevOrigin.x;
         CGFloat newOriginY = self.prevOrigin.y - point.y;
         
-        [self dynAddRemoveCell:newOriginY];
         
         [UIView animateWithDuration:0.75 animations:^{
             CGRect rect = self.bounds;
@@ -106,24 +78,22 @@
             self.bounds = rect;
         }];
     }
+    
+    NSLog(@"handlePanGesture %zd", (NSUInteger)self.bounds.origin.y);
 }
 
 - (void) dynAddRemoveCell:(CGFloat) originY
 {
+    NSLog(@"dynAddRemoveCell");
     YHCellNode* firstNodeTableView = nil;
     YHCellNode* lastNodeInTableView = nil;
     YHCellNode* iterater = [self.reusedCells valueForKey:ID];
-    
-    NSLog(@"visiblecell=%zd", self.visibleCells.count);
-    NSLog(@"self.topcell=%zd", self.topCell);
-    NSLog(@"self.buttomcell=%zd", self.buttomCell);
     
     for (NSUInteger i = 0; i < self.visibleCells.count; i++) {
         if (firstNodeTableView != nil && lastNodeInTableView != nil)
             break;
         
         if (self.topCell == self.visibleCells[i].cell.cellIndex) {
-            NSLog(@"top top");
             firstNodeTableView = self.visibleCells[i];
         }
         
@@ -132,11 +102,7 @@
         }
     }
     
-    NSLog(@"firstNodeTableView.cellindex=%zd", firstNodeTableView.cell.cellIndex);
-    NSLog(@"lastNodeInTableView.cellindex=%zd", lastNodeInTableView.cell.cellIndex);
-    
     if (originY > firstNodeTableView.cell.cellDownEdge) {
-        NSLog(@"remove cell for top");
         self.topCell = firstNodeTableView.cell.cellIndex + 1;
         [firstNodeTableView.cell removeFromSuperview];
         
@@ -148,15 +114,15 @@
     
     else if(originY < firstNodeTableView.cell.cellUpEdge && originY > 0)
     {
-        YHCellNode* node = [self.reusedCells valueForKey:ID];
         
-        if (node == nil) {
-            NSLog(@"add cell for top");
-            node = [[YHCellNode alloc] init];
-        }
- 
+        
         //get row height for each
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:(self.topCell - 1) inSection:sectionIndex];
+        
+        YHCellNode* node = nil;
+        if ([self.dataSource respondsToSelector:@selector(tableView:cellForRowAtIndexPath:)]) {
+            node = [self.dataSource tableView:self cellForRowAtIndexPath:indexPath];
+        }
         
         if([self.delegate respondsToSelector:@selector(tableView:heightForRowAtIndexPath:)])
             node.cell.cellHeight = [self.delegate tableView:self heightForRowAtIndexPath:indexPath];
@@ -177,7 +143,6 @@
     YHCellNode* iterater1 = [self.reusedCells valueForKey:ID];
     
     if (originY + ScreenHeight < lastNodeInTableView.cell.cellUpEdge) {
-        NSLog(@"remove cell for buttom");
         self.buttomCell = lastNodeInTableView.cell.cellIndex - 1;
         [lastNodeInTableView.cell removeFromSuperview];
         
@@ -188,15 +153,14 @@
     }
     else if(originY + ScreenHeight > lastNodeInTableView.cell.cellDownEdge && lastNodeInTableView.cell.cellIndex < self.rowNumInSection)
     {
-        YHCellNode* node = [self.reusedCells valueForKey:ID];
-        
-        if (node == nil) {
-            NSLog(@"add cell for buttom");
-            node = [[YHCellNode alloc] init];
-        }
         
         //get row height for each
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:(self.buttomCell + 1) inSection:sectionIndex];
+        
+        YHCellNode* node = nil;
+        if ([self.dataSource respondsToSelector:@selector(tableView:cellForRowAtIndexPath:)]) {
+            node = [self.dataSource tableView:self cellForRowAtIndexPath:indexPath];
+        }
         
         if([self.delegate respondsToSelector:@selector(tableView:heightForRowAtIndexPath:)])
             node.cell.cellHeight = [self.delegate tableView:self heightForRowAtIndexPath:indexPath];
@@ -216,7 +180,7 @@
 
 - (void)layoutSubviews
 {
-
+    NSLog(@"layoutSubviews*****");
     [super layoutSubviews];
     
     if(self.dataSource)
@@ -229,6 +193,10 @@
         self.firstCreate = false;
         [self createCell];
     }
+    
+//    NSLog(@"layoutSubviews %zd", (NSUInteger)self.bounds.origin.y);
+    
+    [self dynAddRemoveCell:self.bounds.origin.y];
     
 }
 
