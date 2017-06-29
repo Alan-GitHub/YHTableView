@@ -8,6 +8,8 @@
 
 #import "ViewController.h"
 
+#define ID @"CELL"
+
 @interface ViewController ()
 
 @end
@@ -46,12 +48,17 @@
     return 20;
 }
 
-- (YHTableViewCell *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (YHCellNode *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    YHTableViewCell* cell;
+    YHCellNode* node = [tableView.reusedCells valueForKey:ID];
     
+    if (node == nil) {
+        node = [[YHCellNode alloc] init];
+    }
     
-    return cell;
+    node.cell.backgroundColor = [UIColor yellowColor];
+    
+    return node;
 }
 
 - (CGFloat)tableView:(YHTableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath

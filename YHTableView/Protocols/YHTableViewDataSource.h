@@ -10,11 +10,12 @@
 
 @class YHTableView;
 @class YHTableViewCell;
+@class YHCellNode;
 
 @protocol YHTableViewDataSource <NSObject>
 @required
 - (NSInteger)tableView:(YHTableView *)tableView numberOfRowsInSection:(NSInteger)section;
-- (YHTableViewCell *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+- (YHCellNode *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
 - (NSInteger)numberOfSectionsInTableView:(YHTableView *)tableView;
 
 @end
