@@ -45,20 +45,18 @@
 {
 //    NSLog(@"numberOfRowsInSection");
     
-    return 20;
+    return 13;
 }
 
-- (YHCellNode *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (YHTableViewCell *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    YHCellNode* node = [tableView.reusedCells valueForKey:ID];
+    YHTableViewCell* cell = [tableView dequeueReusableCellWithIdentifier:ID];
     
-    if (node == nil) {
-        node = [[YHCellNode alloc] init];
+    if (cell == nil) {
+        cell = [[YHCellNode alloc] init].cell;
     }
     
-    node.cell.backgroundColor = [UIColor yellowColor];
-    
-    return node;
+    return cell;
 }
 
 - (CGFloat)tableView:(YHTableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath

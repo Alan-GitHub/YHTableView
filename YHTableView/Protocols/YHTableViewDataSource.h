@@ -15,7 +15,7 @@
 @protocol YHTableViewDataSource <NSObject>
 @required
 - (NSInteger)tableView:(YHTableView *)tableView numberOfRowsInSection:(NSInteger)section;
-- (YHCellNode *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
+- (YHTableViewCell *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath;
 - (NSInteger)numberOfSectionsInTableView:(YHTableView *)tableView;
 
 @end

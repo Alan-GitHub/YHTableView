@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "YHTableView.h"
 
-@interface ViewController : UIViewController<YHTableViewDataSource>
+@interface ViewController : UIViewController<YHTableViewDataSource, YHTableViewDelegate>
 
 
 @end

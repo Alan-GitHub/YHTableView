@@ -23,9 +23,9 @@
 @interface YHTableView : UIView
 @property (nonatomic, weak, nullable) id <YHTableViewDataSource> dataSource;
 @property (nonatomic, weak, nullable) id <YHTableViewDelegate> delegate;
-@property (nonatomic) NSMutableArray<__kindof YHCellNode *> *visibleCells;
-//@property (nonatomic) NSMutableDictionary<__kindof NSString*,  __kindof YHCellNode *> *reusedCells;
-@property (nonatomic) NSMutableDictionary *reusedCells;
+@property (nonatomic, nullable) NSMutableArray<__kindof YHTableViewCell *> *visibleCells;
+@property (nonatomic, nullable) NSMutableDictionary<__kindof NSString*,  __kindof YHCellNode *> * reusedCells;
+//@property (nonatomic) NSMutableDictionary *reusedCells;
 
 
 @property (nonatomic, assign, readwrite) NSInteger rowNumInSection;
@@ -41,5 +41,8 @@
 @property(nonatomic)         bool                         firstCreate;
 @property(nonatomic)         NSUInteger                   topCell;     //tableview上显示出来的第一个cell
 @property(nonatomic)         NSUInteger                   buttomCell;  //tableview上显示出来的最后一个cell
+
+- (nonnull YHTableViewCell*) dequeueReusableCellWithIdentifier:(nonnull NSString*) identifier ;
+- (void) enqueueReusableCellWithIdentifier:(nonnull YHCellNode*) node forKey:(nonnull NSString*) identifier;
 @end
 

@@ -16,6 +16,7 @@
     if (self != nil) {
         self.pointer = nil;
         self.cell = [[YHTableViewCell alloc] init];
+        self.cell.cellNodePointer = self;
     }
     
     return self;
