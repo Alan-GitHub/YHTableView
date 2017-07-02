@@ -8,10 +8,16 @@
 
 #import "YHCellNode.h"
 
+static NSUInteger NodeCreateCounter = 0;
+
 @implementation YHCellNode
 
 - (instancetype) init
 {
+    NodeCreateCounter++;
+    
+//    NSLog(@"NodeCreateCounter = %zd", NodeCreateCounter);
+    
     self = [super init];
     if (self != nil) {
         self.pointer = nil;

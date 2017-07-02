@@ -45,7 +45,7 @@
 {
 //    NSLog(@"numberOfRowsInSection");
     
-    return 13;
+    return 20;
 }
 
 - (YHTableViewCell *)tableView:(YHTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -55,6 +55,8 @@
     if (cell == nil) {
         cell = [[YHCellNode alloc] init].cell;
     }
+    
+    cell.backgroundColor = [UIColor yellowColor];
     
     return cell;
 }

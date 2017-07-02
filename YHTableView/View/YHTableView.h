@@ -41,6 +41,10 @@
 @property(nonatomic)         bool                         firstCreate;
 @property(nonatomic)         NSUInteger                   topCell;     //tableview上显示出来的第一个cell
 @property(nonatomic)         NSUInteger                   buttomCell;  //tableview上显示出来的最后一个cell
+@property(nonatomic, retain, nullable) YHTableViewCell* firstCellInTableView;
+@property(nonatomic, retain, nullable) YHTableViewCell* lastCellInTableView;
+@property(nonatomic) bool foundFirstCellInTableView;
+@property(nonatomic) bool foundLastCellInTableView;
 
 - (nonnull YHTableViewCell*) dequeueReusableCellWithIdentifier:(nonnull NSString*) identifier ;
 - (void) enqueueReusableCellWithIdentifier:(nonnull YHCellNode*) node forKey:(nonnull NSString*) identifier;

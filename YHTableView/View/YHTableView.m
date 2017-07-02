@@ -27,13 +27,26 @@
         self.buttomCell = 0;
         self.visibleCells = [NSMutableArray array];
         self.reusedCells = [NSMutableDictionary dictionary];
+        self.firstCellInTableView = nil;
+        self.lastCellInTableView = nil;
+        self.foundFirstCellInTableView = false;
+        self.foundLastCellInTableView = false;
         
         UIPanGestureRecognizer* panGesture = [[UIPanGestureRecognizer alloc] init];
         [panGesture addTarget:self action:@selector(handlePanGesture:)];
         [self addGestureRecognizer:panGesture];
+        
+        UITapGestureRecognizer* tapGesture = [[UITapGestureRecognizer alloc] init];
+        [tapGesture addTarget:self action:@selector(handleTapGesture:)];
+        [self addGestureRecognizer:tapGesture];
     }
     
     return self;
+}
+
+- (void) handleTapGesture:(UITapGestureRecognizer*) tapGesture
+{
+    NSLog(@"self.visible.count = %zd", self.visibleCells.count);
 }
 
 - (void) handlePanGesture:(UIPanGestureRecognizer*) panGesture
@@ -44,22 +57,29 @@
     }
     
     if (panGesture.state == UIGestureRecognizerStateChanged) {
+        
         CGPoint point = [panGesture translationInView:self];
         
         CGFloat newOriginX = self.prevOrigin.x;
         CGFloat newOriginY = self.prevOrigin.y - point.y;
         
-        
-        [UIView animateWithDuration:0.75 animations:^{
+//        [UIView animateWithDuration:0.25 animations:^{
             CGRect rect = self.bounds;
             rect.origin = CGPointMake(newOriginX, newOriginY);
             self.bounds = rect;
-        }];
+//        }];
         
+        [self dynAddRemoveCell:newOriginY];
+    
 //        [panGesture setTranslation:CGPointZero inView:self];
     }
     
     if (panGesture.state == UIGestureRecognizerStateEnded) {
+        
+//        CGPoint velocity = [panGesture velocityInView:self];
+//        NSLog(@"velocity.y = %zd  velocity.x = %zd", (NSUInteger)velocity.y, (NSUInteger)velocity.x);
+    
+        
         CGPoint point = [panGesture translationInView:self];
         
         CGFloat newOriginX = self.prevOrigin.x;
@@ -71,43 +91,38 @@
             newOriginY = self.contentHeight - ScreenHeight;
         }
   
-        [UIView animateWithDuration:0.75 animations:^{
+        [UIView animateWithDuration:0.25 animations:^{
             CGRect rect = self.bounds;
             rect.origin = CGPointMake(newOriginX, newOriginY);
             self.bounds = rect;
         }];
+        
+        [self dynAddRemoveCell:newOriginY];
     }
-
 }
 
 - (void) dynAddRemoveCell:(CGFloat) originY
 {
-    YHTableViewCell* firstCellInTableView = nil;
-    YHTableViewCell* lastCellInTableView = nil;
-    
-    for (NSUInteger i = 0; i < self.visibleCells.count; i++) {
-        if (firstCellInTableView != nil && lastCellInTableView != nil)
-            break;
+
+    if (originY >= self.firstCellInTableView.cellUpEdge &&
+        originY <= self.firstCellInTableView.cellDownEdge &&
+        originY + ScreenHeight >= self.lastCellInTableView.cellUpEdge &&
+        originY + ScreenHeight <= self.lastCellInTableView.cellDownEdge)
+    {
+        return;
+    }
+
+    if (originY > self.firstCellInTableView.cellDownEdge) {
         
-        if (self.topCell == self.visibleCells[i].cellIndex) {
-            firstCellInTableView = self.visibleCells[i];
-        }
+        [self.firstCellInTableView removeFromSuperview];
+        self.topCell = self.firstCellInTableView.cellIndex + 1;
         
-        if (self.buttomCell == self.visibleCells[i].cellIndex) {
-            lastCellInTableView = self.visibleCells[i];
-        }
+        [self enqueueReusableCellWithIdentifier:self.firstCellInTableView.cellNodePointer forKey:ID];
+        
+        [self.visibleCells removeObject:self.firstCellInTableView];
     }
     
-    if (originY > firstCellInTableView.cellDownEdge) {
-        self.topCell = firstCellInTableView.cellIndex + 1;
-        [firstCellInTableView removeFromSuperview];
-        
-        [self enqueueReusableCellWithIdentifier:firstCellInTableView.cellNodePointer forKey:ID];
-        
-        [self.visibleCells removeObject:firstCellInTableView];
-    }
-    
-    else if(originY < firstCellInTableView.cellUpEdge && originY > 0)
+    else if(originY < self.firstCellInTableView.cellUpEdge && originY > 0)
     {
         
         
@@ -123,27 +138,30 @@
             cell.cellHeight = [self.delegate tableView:self heightForRowAtIndexPath:indexPath];
         
         cell.cellIndex = self.topCell - 1;
-        cell.cellDownEdge = firstCellInTableView.cellUpEdge;
+        cell.cellDownEdge = self.firstCellInTableView.cellUpEdge;
         cell.cellUpEdge = cell.cellDownEdge - cell.cellHeight;
         self.topCell = cell.cellIndex;
         
         cell.frame = CGRectMake(0, cell.cellUpEdge, ScreenWidth, cell.cellHeight);
         [self addSubview:cell];
+        [self setNeedsLayout];
+        [self layoutIfNeeded];
         
         [self.visibleCells addObject:cell];
     }
     
     
-    if (originY + ScreenHeight < lastCellInTableView.cellUpEdge) {
-        self.buttomCell = lastCellInTableView.cellIndex - 1;
-        [lastCellInTableView removeFromSuperview];
+    if (originY + ScreenHeight < self.lastCellInTableView.cellUpEdge) {
         
-        [self enqueueReusableCellWithIdentifier:lastCellInTableView.cellNodePointer forKey:ID];
+        self.buttomCell = self.lastCellInTableView.cellIndex - 1;
+        [self.lastCellInTableView removeFromSuperview];
         
-        [self.visibleCells removeObject:lastCellInTableView];
+        [self enqueueReusableCellWithIdentifier:self.lastCellInTableView.cellNodePointer forKey:ID];
+        
+        [self.visibleCells removeObject:self.lastCellInTableView];
     }
     
-    else if(originY + ScreenHeight > lastCellInTableView.cellDownEdge && lastCellInTableView.cellIndex < self.rowNumInSection)
+    else if(originY + ScreenHeight > self.lastCellInTableView.cellDownEdge && self.lastCellInTableView.cellIndex < self.rowNumInSection)
     {
         
         //get row height for each
@@ -158,14 +176,36 @@
             cell.cellHeight = [self.delegate tableView:self heightForRowAtIndexPath:indexPath];
         
         cell.cellIndex = self.buttomCell + 1;
-        cell.cellUpEdge = lastCellInTableView.cellDownEdge;
+        cell.cellUpEdge = self.lastCellInTableView.cellDownEdge;
         cell.cellDownEdge = cell.cellUpEdge + cell.cellHeight;
         self.buttomCell = cell.cellIndex;
         
         cell.frame = CGRectMake(0, cell.cellUpEdge, ScreenWidth, cell.cellHeight);
         [self addSubview:cell];
+        [self setNeedsLayout];
+//        [self layoutIfNeeded];
         
         [self.visibleCells addObject:cell];
+    }
+    
+    self.foundFirstCellInTableView = false;
+    self.foundLastCellInTableView = false;
+    
+    for (NSUInteger i = 0; i < self.visibleCells.count; i++) {
+        if (self.foundFirstCellInTableView == true && self.foundLastCellInTableView == true)
+            break;
+        
+        if (self.topCell == self.visibleCells[i].cellIndex) {
+            
+            self.firstCellInTableView = self.visibleCells[i];
+            self.foundFirstCellInTableView = true;
+        }
+        
+        if (self.buttomCell == self.visibleCells[i].cellIndex) {
+            
+            self.lastCellInTableView = self.visibleCells[i];
+            self.foundLastCellInTableView = true;
+        }
     }
 }
 
@@ -184,10 +224,8 @@
         [self createCell];
     }
     
-//    NSLog(@"layoutSubviews %zd", (NSUInteger)self.bounds.origin.y);
-    
-    [self dynAddRemoveCell:self.bounds.origin.y];
-    
+//    [self dynAddRemoveCell:self.bounds.origin.y];
+//    NSLog(@"layoutSubvi  ews");
 }
 
 - (void) executeDataSourceMethod
@@ -208,8 +246,8 @@
     
     NSInteger i = 0;
         
-    for (; (i < self.rowNumInSection) && (self.contentHeight < ScreenHeight); i++) { //row number in section
-//    for (; i < self.rowNumInSection; i++) {
+//    for (; (i < self.rowNumInSection) && (self.contentHeight < ScreenHeight); i++) { //row number in section
+    for (; i < self.rowNumInSection; i++) {
     
         YHCellNode* node = [[YHCellNode alloc] init];
         
@@ -232,10 +270,14 @@
     }
     
     self.buttomCell = i - 1;
+    self.firstCellInTableView = self.visibleCells.firstObject;
+    self.lastCellInTableView = self.visibleCells.lastObject;
     
 }
 
 #pragma mark Maintenance queue. Enqueue and Dequeue
+
+
 - (YHTableViewCell*) dequeueReusableCellWithIdentifier:(NSString*) identifier
 {
     YHCellNode* node = [self.reusedCells valueForKey:identifier];
